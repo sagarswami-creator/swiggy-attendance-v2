@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swiggy IRCTC — Attendance</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --or:#FC8019;--or2:#E06010;--or-bg:#FFF3E8;--or-glow:rgba(252,128,25,0.15);
+  --green:#16A34A;--green-bg:#DCFCE7;
+  --red:#DC2626;--red-bg:#FEE2E2;
+  --text:#0F172A;--text2:#475569;--text3:#94A3B8;
+  --border:#E8EDF2;--bg:#FDF6EE;--white:#fff;
+  --r:16px;--rs:10px;
+  --shadow:0 2px 8px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg:0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;}
+
+/* ── HEADER ── */
+.hdr{background:linear-gradient(135deg,#FF6B00 0%,#FC8019 50%,#E06010 100%);padding:20px 20px 22px;position:sticky;top:0;z-index:30;box-shadow:0 4px 24px rgba(252,128,25,0.4);}
+.hdr-inner{display:flex;align-items:center;gap:14px;max-width:480px;margin:0 auto;}
+.hdr-logo{width:46px;height:46px;background:rgba(255,255,255,0.22);border:1.5px solid rgba(255,255,255,0.4);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;backdrop-filter:blur(8px);}
+.hdr-logo svg{width:26px;height:26px;fill:white;}
+.hdr-info h1{font-size:18px;font-weight:800;color:white;letter-spacing:-0.3px;}
+.hdr-info p{font-size:11px;color:rgba(255,255,255,0.75);margin-top:2px;font-weight:500;}
+.hdr-badge{background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.35);border-radius:20px;padding:5px 12px;font-size:10px;font-weight:700;color:white;letter-spacing:.8px;white-space:nowrap;backdrop-filter:blur(8px);}
+
+/* ── PROGRESS ── */
+.prog-wrap{max-width:480px;margin:0 auto;padding:16px 20px 0;}
+.prog-steps{display:flex;align-items:center;position:relative;}
+.prog-line{position:absolute;top:14px;left:14px;right:14px;height:2px;background:rgba(255,255,255,0.15);z-index:0;}
+.prog-fill{position:absolute;top:14px;left:14px;height:2px;background:linear-gradient(90deg,#FC8019,#FFB347);z-index:1;transition:width 0.5s cubic-bezier(0.4,0,0.2,1);width:0%;}
+.p-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;z-index:2;}
+.p-dot{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all 0.3s;border:2px solid rgba(255,255,255,0.25);}
+.p-dot.done{background:#FC8019;border-color:#FC8019;color:white;box-shadow:0 2px 8px rgba(252,128,25,0.5);}
+.p-dot.active{background:white;border-color:white;color:#FC8019;box-shadow:0 0 0 4px rgba(255,255,255,0.25);}
+.p-lbl{font-size:9px;font-weight:600;color:rgba(255,255,255,0.5);margin-top:5px;letter-spacing:.3px;text-transform:uppercase;}
+.p-lbl.done{color:rgba(252,128,25,0.9);}
+.p-lbl.active{color:white;}
+
+/* ── FORM WRAP ── */
+.fw{max-width:480px;margin:0 auto;padding:0 16px;}
+
+/* ── CARDS ── */
+.card{background:var(--white);border-radius:var(--r);margin-top:14px;box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;transition:all 0.25s;}
+.card:hover{box-shadow:var(--shadow-lg);}
+.card.completed{border-color:#86EFAC;box-shadow:0 2px 8px rgba(22,163,74,0.1);}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 14px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(252,128,25,0.03),transparent);}
+.card.completed .card-head{background:linear-gradient(135deg,rgba(22,163,74,0.04),transparent);}
+.card-head-left{display:flex;align-items:center;gap:12px;}
+.card-icon{width:38px;height:38px;border-radius:11px;background:var(--or-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:all 0.3s;box-shadow:0 2px 6px rgba(252,128,25,0.15);}
+.card.completed .card-icon{background:var(--green-bg);box-shadow:0 2px 6px rgba(22,163,74,0.15);}
+.card-title{font-size:12px;font-weight:700;color:var(--or);text-transform:uppercase;letter-spacing:.6px;}
+.card.completed .card-title{color:var(--green);}
+.card-sub{font-size:11px;color:var(--text3);margin-top:2px;font-weight:500;}
+.card-check{width:26px;height:26px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-size:13px;opacity:0;transform:scale(0.4);transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);}
+.card.completed .card-check{opacity:1;transform:scale(1);}
+.card-body{padding:18px;}
+
+/* ── FIELDS ── */
+.field{margin-bottom:16px;}
+.field:last-child{margin-bottom:0;}
+label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:7px;letter-spacing:0.1px;}
+.req{color:var(--red);margin-left:2px;}
+.lhint{font-size:11px;font-weight:400;color:var(--text3);margin-left:4px;}
+input[type=text],input[type=tel],select{width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;color:var(--text);background:var(--white);appearance:none;-webkit-appearance:none;outline:none;transition:all 0.2s;}
+input[type=text]:hover,input[type=tel]:hover,select:hover{border-color:#CBD5E1;}
+input:focus,select:focus{border-color:var(--or);box-shadow:0 0 0 3px var(--or-glow);background:#FFFBF7;}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px;cursor:pointer;}
+.error-msg{font-size:12px;color:var(--red);margin-top:5px;display:none;font-weight:500;}
+.field.has-error input,.field.has-error select{border-color:var(--red);box-shadow:0 0 0 3px rgba(220,38,38,0.1);}
+.field.has-error .error-msg{display:block;}
+
+/* AUTO FIELD */
+.auto-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1.5px solid var(--border);border-radius:var(--rs);background:linear-gradient(135deg,#FFFBF7,#F8FAFC);}
+.auto-ico{width:34px;height:34px;border-radius:9px;background:var(--or-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(252,128,25,0.12);}
+.auto-val{font-size:15px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:0.5px;}
+.auto-badge{margin-left:auto;font-size:9px;font-weight:700;background:linear-gradient(135deg,#FC8019,#FFB347);color:white;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;}
+
+/* SHIFT TOGGLE */
+.shift-toggle{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.shift-toggle input[type=radio]{display:none;}
+.shift-toggle label{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px 10px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all 0.2s;background:var(--white);margin:0;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.shift-toggle label:hover{border-color:var(--or);background:var(--or-bg);transform:translateY(-1px);box-shadow:0 4px 12px rgba(252,128,25,0.1);}
+#type-start:checked+label{border-color:#16A34A;background:linear-gradient(135deg,#F0FDF4,#DCFCE7);box-shadow:0 4px 14px rgba(22,163,74,0.15);transform:translateY(-1px);}
+#type-end:checked+label{border-color:var(--red);background:linear-gradient(135deg,#FFF5F5,#FEE2E2);box-shadow:0 4px 14px rgba(220,38,38,0.12);transform:translateY(-1px);}
+.tog-ico{font-size:30px;line-height:1;}
+.tog-lbl{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-0.2px;}
+#type-start:checked+label .tog-lbl{color:#16A34A;}
+#type-end:checked+label .tog-lbl{color:var(--red);}
+.tog-sub{font-size:10px;color:var(--text3);line-height:1.5;font-weight:500;}
+.tog-hint{display:flex;gap:10px;margin-top:12px;background:linear-gradient(135deg,#FFF3E8,#FFF8F2);border:1px solid rgba(252,128,25,0.15);border-radius:var(--rs);padding:12px 14px;align-items:flex-start;}
+.tog-hint-ico{font-size:15px;flex-shrink:0;margin-top:1px;}
+.tog-hint-txt{font-size:12px;color:var(--or2);font-weight:500;line-height:1.75;}
+
+/* LOCATION */
+.loc-box{border:1.5px solid var(--border);border-radius:var(--rs);overflow:hidden;transition:border-color 0.2s;}
+.loc-box.loc-required{border-color:var(--red);}
+.loc-status{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--bg);font-size:14px;font-weight:500;color:var(--text3);transition:all 0.3s;}
+.loc-status.got{background:var(--green-bg);color:var(--green);}
+.loc-status.error{background:var(--red-bg);color:var(--red);}
+.loc-dot{width:10px;height:10px;border-radius:50%;background:var(--border);flex-shrink:0;}
+.loc-status.got .loc-dot{background:var(--green);animation:none!important;}
+.loc-status.error .loc-dot{background:var(--red);animation:none!important;}
+.loc-coords{font-size:11px;color:var(--text3);padding:8px 16px;border-top:1px solid var(--border);font-family:monospace;display:none;background:var(--bg);}
+.btn-loc{width:100%;padding:12px;background:var(--white);border:none;border-top:1px solid var(--border);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--or);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background 0.15s;}
+.btn-loc:hover{background:#FFFBF7;}
+.btn-loc:active{background:var(--or-bg);}
+.loc-req-msg{font-size:12px;color:var(--red);margin-top:6px;font-weight:500;display:none;}
+
+/* PHOTO */
+.btn-photo{width:100%;padding:24px;border:2px dashed var(--border);border-radius:var(--r);background:var(--bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.2s;}
+.btn-photo:active,.btn-photo.selected{border-color:var(--or);border-style:solid;background:var(--or-bg);}
+.ph-ico{font-size:36px;}
+.ph-lbl{font-size:15px;font-weight:700;color:var(--text);}
+.ph-sub{font-size:12px;color:var(--text3);text-align:center;}
+
+/* SUBMIT */
+.btn-submit{width:100%;padding:18px;background:linear-gradient(135deg,#FF7A1A,#FC8019,#E06010);color:white;border:none;border-radius:var(--r);font-family:'Inter',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px;box-shadow:0 6px 24px rgba(252,128,25,0.45),0 2px 8px rgba(252,128,25,0.2);transition:all 0.2s;letter-spacing:0.2px;}
+.btn-submit:hover{box-shadow:0 8px 28px rgba(252,128,25,0.55);}
+.btn-submit:active{transform:scale(0.97);box-shadow:0 3px 12px rgba(252,128,25,0.3);}
+.btn-submit:disabled{background:linear-gradient(135deg,#D1D5DB,#CBD5E1);box-shadow:none;cursor:not-allowed;transform:none;}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;}
+
+/* ERROR SUMMARY */
+.err-box{display:none;background:var(--red-bg);border:1.5px solid #FECACA;border-radius:var(--r);padding:16px;margin-top:16px;}
+.err-box-title{font-size:13px;font-weight:700;color:var(--red);margin-bottom:10px;}
+.err-box ul{margin:0;padding-left:18px;}
+.err-box li{font-size:13px;color:var(--red);line-height:1.9;font-weight:500;}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);z-index:100;align-items:flex-end;justify-content:center;}
+.modal-box{background:var(--white);border-radius:28px 28px 0 0;padding:24px 22px 44px;width:100%;max-width:480px;animation:slideUp 0.35s cubic-bezier(0.32,0.72,0,1);}
+.modal-handle{width:36px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 22px;}
+.modal-title{font-size:19px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-0.3px;}
+.modal-sub{font-size:13px;color:var(--text3);margin-bottom:18px;font-weight:500;}
+.modal-body{background:linear-gradient(135deg,#FAFBFC,#F0F4F8);border-radius:var(--r);padding:4px 14px;margin-bottom:20px;border:1px solid var(--border);}
+.m-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.m-row:last-child{border-bottom:none;}
+.m-ico{font-size:16px;width:24px;text-align:center;flex-shrink:0;}
+.m-lbl{font-size:11px;font-weight:600;color:var(--text3);width:90px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.3px;}
+.m-val{font-size:14px;font-weight:600;color:var(--text);}
+.modal-btns{display:grid;grid-template-columns:1fr 2fr;gap:10px;}
+.btn-edit{padding:15px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rs);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;transition:all 0.15s;}
+.btn-edit:hover{border-color:var(--or);color:var(--or);}
+.btn-go{padding:15px;background:linear-gradient(135deg,#FF7A1A,#FC8019,#E06010);border:none;border-radius:var(--rs);font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:white;cursor:pointer;box-shadow:0 4px 16px rgba(252,128,25,0.4);transition:all 0.15s;}
+.btn-go:hover{box-shadow:0 6px 20px rgba(252,128,25,0.5);}
+
+/* SUCCESS */
+#success-screen{display:none;text-align:center;padding:56px 24px;background:var(--white);border-radius:var(--r);margin-top:16px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.succ-anim{width:88px;height:88px;background:linear-gradient(135deg,#DCFCE7,#BBF7D0);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 22px;animation:pop 0.5s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 8px 24px rgba(22,163,74,0.2);}
+#success-screen h2{font-size:23px;font-weight:800;color:var(--or);margin-bottom:8px;letter-spacing:-0.3px;}
+#success-screen p{font-size:14px;color:var(--text2);line-height:1.75;}
+.btn-new{display:inline-block;margin-top:24px;padding:13px 28px;background:var(--or-bg);color:var(--or);border:1.5px solid rgba(252,128,25,0.2);border-radius:var(--rs);font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.btn-new:hover{background:#FFE8D0;border-color:var(--or);}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.4);}}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+@keyframes pop{0%{transform:scale(0);}70%{transform:scale(1.15);}100%{transform:scale(1);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+    </div>
+    <div class="hdr-info">
+      <h1>Swiggy × IRCTC</h1>
+      <p>Daily Attendance — Station Operations</p>
+    </div>
+    <div class="hdr-badge">ATTENDANCE</div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="prog-wrap">
+  <div class="prog-steps">
+    <div class="prog-line"></div>
+    <div class="prog-fill" id="prog-fill"></div>
+    <div class="p-step"><div class="p-dot active" id="dot-1">1</div><div class="p-lbl active" id="lbl-1">Info</div></div>
+    <div class="p-step"><div class="p-dot" id="dot-2">2</div><div class="p-lbl" id="lbl-2">Station</div></div>
+    <div class="p-step"><div class="p-dot" id="dot-3">3</div><div class="p-lbl" id="lbl-3">Shift</div></div>
+    <div class="p-step"><div class="p-dot" id="dot-4">4</div><div class="p-lbl" id="lbl-4">Location</div></div>
+    <div class="p-step"><div class="p-dot" id="dot-5">5</div><div class="p-lbl" id="lbl-5">Photo</div></div>
+  </div>
+</div>
+
+<div class="fw">
+<form id="att-form" novalidate>
+
+  <!-- CARD 1: PERSONAL INFO -->
+  <div class="card" id="card-1">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-icon">👤</div>
+        <div><div class="card-title">Personal Info / व्यक्तिगत जानकारी</div><div class="card-sub">Your name and contact</div></div>
+      </div>
+      <div class="card-check">✓</div>
+    </div>
+    <div class="card-body">
+      <div class="field" id="f-name">
+        <label>Full Name / पूरा नाम <span class="req">*</span></label>
+        <input type="text" id="name" placeholder="e.g. Ramesh Kumar" autocomplete="name" oninput="checkCard(1)">
+        <div class="error-msg">Please enter your name / कृपया नाम दर्ज करें</div>
+      </div>
+      <div class="field" id="f-number">
+        <label>Mobile Number / मोबाइल नंबर <span class="req">*</span></label>
+        <input type="tel" id="number" placeholder="10-digit number" maxlength="10" inputmode="numeric" oninput="checkCard(1)">
+        <div class="error-msg">Enter valid 10-digit number / सही नंबर दर्ज करें</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD 2: STATION INFO -->
+  <div class="card" id="card-2">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-icon">🚉</div>
+        <div><div class="card-title">Station Info / स्टेशन जानकारी</div><div class="card-sub">Your station details</div></div>
+      </div>
+      <div class="card-check">✓</div>
+    </div>
+    <div class="card-body">
+      <div class="field" id="f-station">
+        <label>Station Name / स्टेशन नाम <span class="req">*</span></label>
+        <input type="text" id="station" placeholder="e.g. VIJAYAWADA" autocomplete="off"
+               style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();checkCard(2)">
+        <div class="error-msg">Please enter station name / स्टेशन नाम दर्ज करें</div>
+      </div>
+      <div class="field" id="f-station-code">
+        <label>Station Code / स्टेशन कोड <span class="req">*</span></label>
+        <input type="text" id="station-code" placeholder="e.g. BZA" autocomplete="off"
+               style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();checkCard(2)">
+        <div class="error-msg">Please enter station code / स्टेशन कोड दर्ज करें</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD 3: SHIFT DETAILS -->
+  <div class="card" id="card-3">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-icon">⏰</div>
+        <div><div class="card-title">Shift Details / शिफ्ट विवरण</div><div class="card-sub">Shift type and timing</div></div>
+      </div>
+      <div class="card-check">✓</div>
+    </div>
+    <div class="card-body">
+
+      <!-- Date auto -->
+      <div class="field">
+        <label>Date / तारीख <span class="lhint">(auto — today)</span></label>
+        <div class="auto-row">
+          <div class="auto-ico"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#FC8019" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <span class="auto-val" id="date-display"></span>
+          <span class="auto-badge">Auto</span>
+        </div>
+        <input type="hidden" id="date">
+      </div>
+
+      <!-- Shift Type -->
+      <div class="field" id="f-shift">
+        <label>Shift Type / शिफ्ट प्रकार <span class="req">*</span></label>
+        <select id="shift" onchange="checkCard(3)">
+          <option value="">— Select shift / शिफ्ट चुनें —</option>
+          <option value="Full Time">Full Time / फुल टाइम</option>
+          <option value="Part Time">Part Time / पार्ट टाइम</option>
+          <option value="Break Shift">Break Shift / ब्रेक शिफ्ट</option>
+        </select>
+        <div class="error-msg">Please select shift type / शिफ्ट चुनें</div>
+      </div>
+
+      <!-- Shift Start / End Toggle -->
+      <div class="field" id="f-type">
+        <label>Shift Start / Shift End <span class="req">*</span></label>
+        <div class="shift-toggle">
+          <input type="radio" name="att-type" id="type-start" value="Shift Start">
+          <label for="type-start" onclick="setTimeout(()=>checkCard(3),10)">
+            <span class="tog-ico">🟢</span>
+            <span class="tog-lbl">Shift Start</span>
+            <span class="tog-sub">शिफ्ट शुरू<br>Mark when arriving</span>
+          </label>
+          <input type="radio" name="att-type" id="type-end" value="Shift End">
+          <label for="type-end" onclick="setTimeout(()=>checkCard(3),10)">
+            <span class="tog-ico">🔴</span>
+            <span class="tog-lbl">Shift End</span>
+            <span class="tog-sub">शिफ्ट खत्म<br>Mark when leaving</span>
+          </label>
+        </div>
+        <div class="tog-hint">
+          <span class="tog-hint-ico">👆</span>
+          <span class="tog-hint-txt">
+            Select <strong>Shift Start</strong> when you arrive at station / स्टेशन पहुंचने पर <strong>शिफ्ट शुरू</strong> चुनें।<br>
+            Select <strong>Shift End</strong> when you leave / जाते समय <strong>शिफ्ट खत्म</strong> चुनें।
+          </span>
+        </div>
+        <div class="error-msg" id="type-error" style="display:none">Please select Shift Start or End / शिफ्ट शुरू या खत्म चुनें</div>
+      </div>
+
+      <!-- Time auto -->
+      <div class="field">
+        <label>Time / समय <span class="lhint">(auto — live)</span></label>
+        <div class="auto-row">
+          <div class="auto-ico"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#FC8019" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <span class="auto-val" id="time-display" style="letter-spacing:1px;"></span>
+          <span class="auto-badge">Live</span>
+        </div>
+        <input type="hidden" id="time">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CARD 4: LOCATION -->
+  <div class="card" id="card-4">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-icon">📍</div>
+        <div><div class="card-title">Location / स्थान</div><div class="card-sub">GPS auto-captured</div></div>
+      </div>
+      <div class="card-check">✓</div>
+    </div>
+    <div class="card-body">
+      <div class="loc-box" id="loc-box">
+        <div class="loc-status" id="loc-status">
+          <div class="loc-dot" style="animation:pulse 1.2s infinite"></div>
+          <span id="loc-text">Getting your location… / स्थान मिल रहा है…</span>
+        </div>
+        <div class="loc-coords" id="loc-coords"></div>
+        <button type="button" class="btn-loc" id="btn-loc" onclick="getLocation()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          Retry location / फिर से लें
+        </button>
+      </div>
+      <input type="hidden" id="latitude">
+      <input type="hidden" id="longitude">
+      <div class="loc-req-msg" id="loc-req-msg">Location required — allow GPS / GPS की अनुमति दें</div>
+    </div>
+  </div>
+
+  <!-- CARD 5: PHOTO -->
+  <div class="card" id="card-5">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-icon">📷</div>
+        <div><div class="card-title">Photo / फोटो</div><div class="card-sub">Selfie with timestamp watermark</div></div>
+      </div>
+      <div class="card-check">✓</div>
+    </div>
+    <div class="card-body">
+      <div class="field" id="f-photo">
+        <button type="button" class="btn-photo" id="btn-camera" onclick="document.getElementById('photo-input').click()">
+          <span class="ph-ico">📸</span>
+          <span class="ph-lbl">Take Selfie / सेल्फी लें</span>
+          <span class="ph-sub">Front camera • Timestamp auto-added<br>फ्रंट कैमरा • समय-तारीख स्वतः जुड़ेगी</span>
+        </button>
+        <input type="file" id="photo-input" accept="image/*" capture="user" style="display:none" onchange="previewPhoto(this)">
+        <div id="photo-preview-wrap" style="display:none;margin-top:12px;position:relative;">
+          <canvas id="photo-canvas" style="width:100%;border-radius:10px;max-height:240px;object-fit:cover;display:block;"></canvas>
+          <button type="button" onclick="clearPhoto()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+        </div>
+        <div class="error-msg" id="photo-error">Please take your selfie / सेल्फी लें</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR SUMMARY -->
+  <div id="err-summary" class="err-box">
+    <div class="err-box-title">⚠️ Please fix before submitting / जमा करने से पहले सुधारें</div>
+    <ul id="err-list"></ul>
+  </div>
+
+  <!-- CONFIRM MODAL -->
+  <div id="confirm-modal" class="modal-ov">
+    <div class="modal-box">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Confirm Attendance / पुष्टि करें</div>
+      <div class="modal-sub">Please verify your details / जानकारी जांचें</div>
+      <div id="confirm-details" class="modal-body"></div>
+      <div class="modal-btns">
+        <button type="button" class="btn-edit" onclick="closeConfirm()">Edit / बदलें</button>
+        <button type="button" class="btn-go" onclick="proceedSubmit()">Submit / जमा करें ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn-submit" id="btn-submit">Submit Attendance / जमा करें</button>
+
+</form>
+
+<!-- SUCCESS -->
+<div id="success-screen">
+  <div class="succ-anim">✅</div>
+  <h2>Attendance Recorded! / हाजिरी दर्ज!</h2>
+  <p id="success-msg"></p>
+  <button class="btn-new" onclick="resetForm()">Submit Another / एक और जमा करें</button>
+</div>
+</div>
+
+<script>
+const TOTAL_STEPS = 5;
+let stampedPhotoBase64 = '';
+
+// ── DATE (locked) ─────────────────────────────────────────────
+(function(){
+  const now = new Date();
+  document.getElementById('date').value = now.toISOString().split('T')[0];
+  const opts = {weekday:'short',day:'numeric',month:'short',year:'numeric'};
+  document.getElementById('date-display').textContent = now.toLocaleDateString('en-IN',opts);
+})();
+
+// ── LIVE CLOCK ────────────────────────────────────────────────
+function updateClock(){
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('time').value = hh+':'+mm;
+  document.getElementById('time-display').textContent = hh+':'+mm+':'+ss;
+}
+updateClock();
+setInterval(updateClock,1000);
+
+// ── PROGRESS ──────────────────────────────────────────────────
+function updateProgress(){
+  let done = 0;
+  for(let i=1;i<=TOTAL_STEPS;i++){
+    if(document.getElementById('card-'+i).classList.contains('completed')) done++;
+  }
+  document.getElementById('prog-fill').style.width = Math.round(done/TOTAL_STEPS*100)+'%';
+  for(let i=1;i<=TOTAL_STEPS;i++){
+    const dot = document.getElementById('dot-'+i);
+    const lbl = document.getElementById('lbl-'+i);
+    const card = document.getElementById('card-'+i);
+    if(card.classList.contains('completed')){
+      dot.className='p-dot done'; dot.textContent='✓';
+      lbl.className='p-lbl done';
+    } else if(done===i-1){
+      dot.className='p-dot active'; dot.textContent=i;
+      lbl.className='p-lbl active';
+    } else {
+      dot.className='p-dot'; dot.textContent=i;
+      lbl.className='p-lbl';
+    }
+  }
+}
+
+function checkCard(n){
+  const card = document.getElementById('card-'+n);
+  let ok = false;
+  if(n===1){
+    ok = document.getElementById('name').value.trim().length>1 &&
+         /^[6-9][0-9]{9}$/.test(document.getElementById('number').value.trim());
+  } else if(n===2){
+    ok = document.getElementById('station').value.trim().length>1 &&
+         document.getElementById('station-code').value.trim().length>0;
+  } else if(n===3){
+    const t = document.querySelector('input[name="att-type"]:checked');
+    ok = document.getElementById('shift').value!=='' && t!==null;
+  } else if(n===4){
+    ok = document.getElementById('latitude').value!=='';
+  } else if(n===5){
+    ok = stampedPhotoBase64!=='';
+  }
+  card.classList.toggle('completed',ok);
+  updateProgress();
+}
+
+// ── LOCATION ──────────────────────────────────────────────────
+function getLocation(){
+  const btn=document.getElementById('btn-loc');
+  const status=document.getElementById('loc-status');
+  const locText=document.getElementById('loc-text');
+  const coords=document.getElementById('loc-coords');
+  const dot=status.querySelector('.loc-dot');
+  locText.textContent='Getting your location… / स्थान मिल रहा है…';
+  status.className='loc-status';
+  dot.style.animation='pulse 1.2s infinite';
+  btn.disabled=true;
+  document.getElementById('loc-req-msg').style.display='none';
+  document.getElementById('loc-box').classList.remove('loc-required');
+  if(!navigator.geolocation){setLocError('GPS not supported');return;}
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const lat=pos.coords.latitude.toFixed(6);
+      const lng=pos.coords.longitude.toFixed(6);
+      document.getElementById('latitude').value=lat;
+      document.getElementById('longitude').value=lng;
+      status.className='loc-status got';
+      dot.style.animation='none';
+      locText.textContent='Location captured ✓ / स्थान मिल गया ✓';
+      coords.textContent='Lat: '+lat+'   Lng: '+lng;
+      coords.style.display='block';
+      btn.innerHTML='<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg> Update / अपडेट';
+      btn.disabled=false;
+      checkCard(4);
+    },
+    err=>{
+      let msg='Could not get location';
+      if(err.code===1) msg='Permission denied — tap Retry after allowing GPS';
+      if(err.code===2) msg='Unavailable — move near a window';
+      if(err.code===3) msg='Timed out — tap Retry';
+      setLocError(msg);
+    },
+    {timeout:12000,enableHighAccuracy:true}
+  );
+}
+function setLocError(msg){
+  const s=document.getElementById('loc-status');
+  s.className='loc-status error';
+  s.querySelector('.loc-dot').style.animation='none';
+  document.getElementById('loc-text').textContent=msg;
+  const btn=document.getElementById('btn-loc');
+  btn.innerHTML='<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg> Retry / फिर लें';
+  btn.disabled=false;
+}
+window.addEventListener('load',()=>getLocation());
+
+// ── PHOTO WITH WATERMARK ──────────────────────────────────────
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    this.beginPath();this.moveTo(x+r,y);this.lineTo(x+w-r,y);
+    this.quadraticCurveTo(x+w,y,x+w,y+r);this.lineTo(x+w,y+h-r);
+    this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);this.lineTo(x+r,y+h);
+    this.quadraticCurveTo(x,y+h,x,y+h-r);this.lineTo(x,y+r);
+    this.quadraticCurveTo(x,y,x+r,y);this.closePath();
+  };
+}
+
+function previewPhoto(input){
+  if(!input.files||!input.files[0]) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=600;
+      let w=img.width,h=img.height;
+      if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}
+      else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
+      const canvas=document.getElementById('photo-canvas');
+      canvas.width=w; canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+
+      // Watermark
+      const now=new Date();
+      const dateStr=now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+      const timeStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+      const station=document.getElementById('station').value||'STATION';
+      const name=document.getElementById('name').value.trim()||'Worker';
+      const typeEl=document.querySelector('input[name="att-type"]:checked');
+      const typeStr=typeEl?typeEl.value:'Attendance';
+      const lat=document.getElementById('latitude').value||'';
+      const lng=document.getElementById('longitude').value||'';
+
+      const lines=[
+        '📍 Swiggy IRCTC — '+typeStr,
+        '👤 '+name+' | 🚉 '+station,
+        '📅 '+dateStr+'  🕐 '+timeStr,
+        lat?'GPS: '+lat+', '+lng:'GPS: Not captured',
+      ];
+
+      const fSize=Math.max(10,Math.round(w/42));
+      const boxH=fSize*1.8*lines.length+14;
+      const boxY=h-boxH-6;
+
+      ctx.fillStyle='rgba(0,0,0,0.68)';
+      ctx.beginPath();
+      ctx.roundRect(6,boxY,w-12,boxH,8);
+      ctx.fill();
+
+      ctx.fillStyle='#FFFFFF';
+      ctx.font='bold '+fSize+'px Inter,Arial,sans-serif';
+      ctx.textBaseline='top';
+      lines.forEach((line,i)=>{
+        ctx.fillText(line,14,boxY+8+i*fSize*1.8);
+      });
+
+      // Orange badge top-right
+      const badgeTxt=typeStr.toUpperCase();
+      ctx.font='bold '+Math.max(9,Math.round(w/46))+'px Inter,Arial,sans-serif';
+      const bW=ctx.measureText(badgeTxt).width+18;
+      ctx.fillStyle='#FC8019';
+      ctx.beginPath();
+      ctx.roundRect(w-bW-6,6,bW,24,5);
+      ctx.fill();
+      ctx.fillStyle='#FFFFFF';
+      ctx.textBaseline='middle';
+      ctx.fillText(badgeTxt,w-bW-6+9,18);
+
+      stampedPhotoBase64=canvas.toDataURL('image/jpeg',0.70);
+      document.getElementById('photo-preview-wrap').style.display='block';
+      document.getElementById('photo-error').style.display='none';
+      document.getElementById('f-photo').classList.remove('has-error');
+      document.getElementById('btn-camera').classList.add('selected');
+      checkCard(5);
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function clearPhoto(){
+  document.getElementById('photo-input').value='';
+  const canvas=document.getElementById('photo-canvas');
+  canvas.getContext('2d').clearRect(0,0,9999,9999);
+  document.getElementById('photo-preview-wrap').style.display='none';
+  document.getElementById('btn-camera').classList.remove('selected');
+  stampedPhotoBase64='';
+  checkCard(5);
+}
+
+// ── VALIDATION ────────────────────────────────────────────────
+function validate(){
+  const errors=[];
+  const checks=[
+    {id:'name',fid:'f-name',lbl:'Full Name',fn:v=>v.trim().length>1},
+    {id:'number',fid:'f-number',lbl:'Mobile Number',fn:v=>/^[6-9][0-9]{9}$/.test(v.trim())},
+    {id:'station',fid:'f-station',lbl:'Station Name',fn:v=>v.trim().length>1},
+    {id:'station-code',fid:'f-station-code',lbl:'Station Code',fn:v=>v.trim().length>0},
+    {id:'shift',fid:'f-shift',lbl:'Shift Type',fn:v=>v!==''},
+  ];
+  checks.forEach(c=>{
+    const el=document.getElementById(c.id);
+    const field=document.getElementById(c.fid);
+    if(!c.fn(el.value)){field.classList.add('has-error');errors.push(c.lbl+' is missing / अधूरा है');}
+    else field.classList.remove('has-error');
+  });
+  const typeRadio=document.querySelector('input[name="att-type"]:checked');
+  if(!typeRadio){document.getElementById('type-error').style.display='block';errors.push('Shift Start/End — please select / चुनें');}
+  else document.getElementById('type-error').style.display='none';
+  if(!stampedPhotoBase64){
+    document.getElementById('photo-error').style.display='block';
+    document.getElementById('f-photo').classList.add('has-error');
+    errors.push('Selfie / सेल्फी लें');
+  } else {
+    document.getElementById('photo-error').style.display='none';
+    document.getElementById('f-photo').classList.remove('has-error');
+  }
+  const lat=document.getElementById('latitude').value;
+  if(!lat){
+    document.getElementById('loc-req-msg').style.display='block';
+    document.getElementById('loc-box').classList.add('loc-required');
+    errors.push('Location / GPS चालू करें');
+  } else {
+    document.getElementById('loc-req-msg').style.display='none';
+    document.getElementById('loc-box').classList.remove('loc-required');
+  }
+  const summary=document.getElementById('err-summary');
+  const list=document.getElementById('err-list');
+  if(errors.length>0){
+    list.innerHTML=errors.map(e=>'<li>'+e+'</li>').join('');
+    summary.style.display='block';
+    summary.scrollIntoView({behavior:'smooth',block:'center'});
+    return false;
+  }
+  summary.style.display='none';
+  list.innerHTML='';
+  return true;
+}
+
+// ── SUBMIT → MODAL ────────────────────────────────────────────
+document.getElementById('att-form').addEventListener('submit',function(e){
+  e.preventDefault();
+  if(!validate()) return;
+  const typeRadio=document.querySelector('input[name="att-type"]:checked');
+  const rows=[
+    {ico:'👤',lbl:'Name / नाम',val:document.getElementById('name').value.trim()},
+    {ico:'🚉',lbl:'Station',val:document.getElementById('station').value+' ('+document.getElementById('station-code').value+')'},
+    {ico:'⏰',lbl:'Shift',val:document.getElementById('shift').value},
+    {ico:'🔘',lbl:'Type',val:typeRadio?typeRadio.value:''},
+    {ico:'🕐',lbl:'Time',val:document.getElementById('time-display').textContent},
+    {ico:'📅',lbl:'Date',val:document.getElementById('date-display').textContent},
+  ];
+  document.getElementById('confirm-details').innerHTML=rows.map(r=>
+    `<div class="m-row"><span class="m-ico">${r.ico}</span><span class="m-lbl">${r.lbl}</span><span class="m-val">${r.val}</span></div>`
+  ).join('');
+  document.getElementById('confirm-modal').style.display='flex';
+  window._pendingPhoto=stampedPhotoBase64;
+});
+
+function closeConfirm(){document.getElementById('confirm-modal').style.display='none';}
+
+// ── PROCEED SUBMIT ────────────────────────────────────────────
+async function proceedSubmit(){
+  closeConfirm();
+  const btn=document.getElementById('btn-submit');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Submitting…';
+  const typeRadio=document.querySelector('input[name="att-type"]:checked');
+  const payload={
+    name:        document.getElementById('name').value.trim(),
+    number:      document.getElementById('number').value.trim(),
+    station:     document.getElementById('station').value,
+    stationCode: document.getElementById('station-code').value,
+    date:        document.getElementById('date').value,
+    shift:       document.getElementById('shift').value,
+    type:        typeRadio?typeRadio.value:'',
+    time:        document.getElementById('time').value,
+    latitude:    document.getElementById('latitude').value||'Not captured',
+    longitude:   document.getElementById('longitude').value||'Not captured',
+    photoBase64: window._pendingPhoto||'',
+    submittedAt: new Date().toISOString()
+  };
+
+  // ── REPLACE with your Apps Script Web App URL ──
+  const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyTJAnSBGaTDlMqh817RB6lz13GwVsPUS26wEIoZg18CnoxH5Gg-TlFBXsCJxuvf8E9ew/exec';
+
+  try{
+    const res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain'}});
+    const result=await res.json();
+    if(result.status==='ok'){
+      showSuccess(payload);
+    } else if(result.status==='duplicate'){
+      showWarn('dup-warn','⚠ Already submitted / पहले से जमा',result.message);
+      btn.disabled=false; btn.textContent='Submit Attendance / जमा करें';
+    } else {
+      alert('Failed: '+(result.message||'Please try again'));
+      btn.disabled=false; btn.textContent='Submit Attendance / जमा करें';
+    }
+  }catch(err){
+    if(SCRIPT_URL==='YOUR_ATTENDANCE_SCRIPT_URL_HERE'){showSuccess(payload);}
+    else{alert('Network error. Check connection.');btn.disabled=false;btn.textContent='Submit Attendance / जमा करें';}
+  }
+}
+
+function showWarn(id,title,msg){
+  const ex=document.getElementById(id);if(ex)ex.remove();
+  const box=document.createElement('div');
+  box.id=id;
+  box.style.cssText='background:#FFF3E8;border:1.5px solid #FC8019;border-radius:12px;padding:14px 16px;margin-top:16px;font-size:13px;color:#C2410C;font-weight:500;';
+  box.innerHTML='<strong>'+title+'</strong><br>'+msg;
+  document.getElementById('btn-submit').parentNode.insertBefore(box,document.getElementById('btn-submit'));
+  box.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function showSuccess(payload){
+  document.getElementById('att-form').style.display='none';
+  document.getElementById('success-screen').style.display='block';
+  const reminder=payload.type==='Shift Start'
+    ?'<div style="margin-top:14px;background:#FFF3E8;border-radius:10px;padding:12px 16px;font-size:13px;color:#C45308;font-weight:500;">⏰ Remember to submit <strong>Shift End</strong> when you leave!</div>'
+    :'<div style="margin-top:14px;background:#DCFCE7;border-radius:10px;padding:12px 16px;font-size:13px;color:#15803D;font-weight:500;">✅ Shift complete. See you tomorrow!</div>';
+  document.getElementById('success-msg').innerHTML=
+    '<strong>'+payload.name+'</strong> at <strong>'+payload.station+'</strong><br>'+
+    payload.type+' • '+payload.shift+' • '+payload.time+'<br>'+
+    payload.date+reminder;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function resetForm(){
+  document.getElementById('att-form').reset();
+  document.getElementById('att-form').style.display='block';
+  document.getElementById('success-screen').style.display='none';
+  clearPhoto();
+  document.getElementById('loc-status').className='loc-status';
+  document.getElementById('loc-text').textContent='Getting your location… / स्थान मिल रहा है…';
+  document.getElementById('loc-coords').style.display='none';
+  document.getElementById('latitude').value='';
+  document.getElementById('longitude').value='';
+  document.getElementById('loc-req-msg').style.display='none';
+  document.getElementById('loc-box').classList.remove('loc-required');
+  document.getElementById('loc-status').querySelector('.loc-dot').style.animation='pulse 1.2s infinite';
+  document.getElementById('btn-submit').disabled=false;
+  document.getElementById('btn-submit').textContent='Submit Attendance / जमा करें';
+  document.getElementById('err-summary').style.display='none';
+  document.getElementById('err-list').innerHTML='';
+  document.getElementById('type-error').style.display='none';
+  document.querySelectorAll('input[name="att-type"]').forEach(r=>r.checked=false);
+  ['dup-warn'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove();});
+  for(let i=1;i<=TOTAL_STEPS;i++) document.getElementById('card-'+i).classList.remove('completed');
+  const now=new Date();
+  document.getElementById('date').value=now.toISOString().split('T')[0];
+  const opts={weekday:'short',day:'numeric',month:'short',year:'numeric'};
+  document.getElementById('date-display').textContent=now.toLocaleDateString('en-IN',opts);
+  updateProgress();
+  getLocation();
+  updateClock();
+}
+</script>
+</body>
+</html>
